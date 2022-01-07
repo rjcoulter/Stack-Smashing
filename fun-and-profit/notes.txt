@@ -93,4 +93,31 @@ memory                                                        memory
 top of                                                        bottom of
 stack                                                         stack
 
+Buffer Overflows
+- The result of stuffing more data into a buffer than it can handle
+- strcpy() copies the contents of larger_string into buffer until
+  a null character is found on the string
+- The buffer is 16 bytes long, and we are trying to stuff 256 bytes
+  into it
+- All 240 bytes in the stack after the buffer are being overwriten
+- The return address will now be 0x41414141 (Hex character value of 'A' is 0x41)
+  - This is outside the process address space, which is why when
+    the function returns and tries to read the instruction from that
+    address there is a segfault
+- A buffer overflow lets us change the return address of a function,
+  altering the flow of execution of the program
+
+Stack layout from example2.c
+
+bottom of                                                     top of
+memory                                                        memory
+         buffer        sfp   ret   *str     
+<------ [            ][    ][    ][    ]   
+top of                                                        bottom of
+stack                                                         stack
+
+
+
+
+
 
