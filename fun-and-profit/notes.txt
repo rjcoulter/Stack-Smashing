@@ -116,12 +116,27 @@ memory                                                        memory
 top of                                                        bottom of
 stack                                                         stack
 
+Shell Code
+- Now we can modify the return address and the flow of execution,
+  what do we want to execute
+  - Usually we would want to spawn a shell to issue commands we want
+  - How do we place these instructions in the address space?
+- Place the code you are trying to execute in the buffer that is
+  being overflowed, and overwrite the return address so that it
+  points back to the buffer
+- Assuming the stack starts at address 0xFF, and that S stands for
+  the code we want to execute it would look like this
 
 
+bottom of   DDDDDDDDEEEEEEEEEEEE EEEE FFFF FFFF FFFF FFFF   top of
+memory      89ABCDEF0123456789AB CDEF 0123 4567 89AB CDEF   memory
 
-
-
-
+          buffer               sfp   ret    a     b     c
+<------ [SSSSSSSSSSSSSSSSSSSS][SSSS][0xD8][0x01][0x02][0x03]
+         ^                             |
+         |_____________________________|
+top of                                                      bottom of
+stack                                                       stack
 
 
 
