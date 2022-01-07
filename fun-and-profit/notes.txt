@@ -1,0 +1,15 @@
+Notes on "Smashing the Stack for Fun and Profit" by Aleph One
+
+Introduction
+- Explain what buffer overflows are and how they work
+- Buffer -> Contiguous block of computer memory that holds multiple
+  instances of some data type, associated with word buffer
+  arrays
+- Arrays can be either static or dynamic
+  - Stacic -> allocated at load time on data segment
+  - Dynamic -> allocated at run time on the stack
+- We are concered only with overflows of dynamic buffers, ie 
+  stack-based buffer overflows
+
+Process Memory Organization
+
