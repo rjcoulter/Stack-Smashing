@@ -12,4 +12,37 @@ Introduction
   stack-based buffer overflows
 
 Process Memory Organization
+- Processes are divided into three regions
+  - Text, Data, and Stack
+- Text Region -> Fixed by the program, includes the code and 
+  read only data, the text section of the executable file
+  - Normally marked read only, any write attempt to it will cause a 
+    segfault
+- Data Region -> Contains intialized and unintialized data, static
+  variables are stored in this region
+  - Corresponds to the data-bss section of an executable file
+  - Can use the brk(2) system call to change its size
+- Stack Region -> Abstract data type, LIFO
+  - Ie, last object put in the stack is the first removed
+  - Two most important ops are push (add to top) and pop (remove from top)
+
+
+
+                      /------------------\ lower
+                      |                  | memory
+                      |       Text       | addresses
+                      |                  |
+                      |------------------|
+                      | (Initialized)    |
+                      |       Data       |
+                      | (Uninitialized)  |
+                      |------------------|
+                      |                  |
+                      |     Stack        | higher
+                      |                  | memory
+                      \------------------/ addresses
+
+Why use a Stack?
+
+
 
