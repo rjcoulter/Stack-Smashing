@@ -138,9 +138,16 @@ memory      89ABCDEF0123456789AB CDEF 0123 4567 89AB CDEF   memory
 top of                                                      bottom of
 stack                                                       stack
 
+- Don't know where in the memory space of the program we are trying
+  to exploit the shell code will be placed
+- Need to place code we want to execute in the stack or the data
+  segment, and trasnfer control to it
+  - To do this you can place code in a global array in the data
+    segment
+- To get a hex representation of the binary code you can compile
+  it then use gdb
 
-
-
+Writing an Exploit
 
 
 
