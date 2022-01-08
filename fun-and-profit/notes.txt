@@ -200,3 +200,22 @@ Small Buffer Overflows
   <strings><argv pointers>NULL<envp pointers>NULL<argc><argv>envp>
 - Our new program exploit4 will take an extra variable, the 
   size of the variable containing the shellcode and NOPs
+
+Finding Buffer Overflows
+- Buffer overflows are the result of stuffing more information
+  into a buffer than it is meant to hold
+- C does not have any built in bounds checking, so it often
+  manifests as writing past the end of a character array
+  - The C standard library provides a number of functions for
+    copying or appending strings, that perform no bounds checking
+    - strcat(), strcpy(), sprintf(); vsprintf()
+  - These functions operate on null-terminated strings, and do
+    not check for overflow of the recieving string
+    - gets() is another function that reads a line from stdin
+      into a buffer until either a terminating newline or EOF
+- If the target of any of these functions is a buffer of static
+  size, and its other argument was somehow derived from user
+  input, there is a good chance a BO exploit exists
+- Other mechanism seen is a while loop that reads characters in
+  to some buffer until a certain delimeter is reached
+- grep(1) is your friend
