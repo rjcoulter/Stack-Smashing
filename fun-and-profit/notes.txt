@@ -148,6 +148,55 @@ stack                                                       stack
   it then use gdb
 
 Writing an Exploit
+- We have 
+  - shellcode, which we know must be in the string we use to 
+    overflow the buffer
+  - know we must point the return address back into the buffer
+- If we try to guess the offset even if we know where the start
+  of the stack lives it is nearly impossible
+  - Problem is that we need to guess exactly where the address
+    of our cdoe will start
+  - If we are off by even one byte we will get a segfault or 
+    invalid instruction
+- We can use a NOP sled to pad the front of our overflow buffer
+  with NOP instructions 
+  - Almost all processors have a NOP instruction that performs
+    a null operation, usually used to delay execution for 
+    the purposes of timing
+  - We will try to get the return address to point back to
+    somwhere in the NOP sled, which will execute those until
+    the shellcode is reached
+- Good selection for our buffer size is about 100 bytes more 
+  the the size of the buffer we are trying to overflow
+  - Want to give space for NOPs, but still overwrite the return
+    address with what we guess
 
+bottom of   DDDDDDDDEEEEEEEEEEEE EEEE FFFF FFFF FFFF FFFF   top of
+memory      89ABCDEF0123456789AB CDEF 0123 4567 89AB CDEF   memory
 
+          buffer               sfp   ret    a     b     c
+<------ [NNNNNNNNNNSSSSSSSSSS][SSSS][0xD8][0x01][0x02][0x03]
+            ^                          |
+            |__________________________|
+top of                                                      bottom of
+stack                                                       stack
 
+Small Buffer Overflows
+- Sometimes the buffer you want to overflow will be so small
+  the shellcode wont fit, and the return address will be 
+  overwriten with instructions instead of the address of our 
+  code - or - the number of NOPs we can pad with will be so 
+  small our chances of hitting it will be miniscule
+- Have to use a different approach, which will only work
+  if you have access to a program's environment variables
+- Place the shellcode in an environment variable, and then overflow
+  the buffer with the address of this variable in memory
+  - You can make the environment variable holding the shell
+    code as large as you want
+  - Environment variables are stored in the top of the stack
+    when the program is started, any modiviation by setenv()
+    are then allocated elsewhere
+- The stack at the beginning of a program looks like this
+  <strings><argv pointers>NULL<envp pointers>NULL<argc><argv>envp>
+- Our new program exploit4 will take an extra variable, the 
+  size of the variable containing the shellcode and NOPs
