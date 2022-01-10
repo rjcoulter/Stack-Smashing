@@ -92,3 +92,145 @@ The stack and format strings
       the stack
 
 Format string vulnerabilities
+- Generic class of a format string vulnerability is a 'channeling
+  problem'
+  - This type of vulnerability can appear if two different types
+    of information channels are merged into one, and special escape
+    characters or sequences are used to distinguish which channel is
+    currently active
+  - Usually one channel is a data channel, which is not parsed 
+    actively but just copied, which the other channel is a controlling
+    channel
+- If the attacker is able to supply input that is used in one 
+  channel this becomes a problem
+- Typically two situations where format string vulnerabilites
+  can arise, shown in example1.c
+  - One -> Vuln is in the second param to the syslog function, the
+    format string is partially usersupplied
+  - Two -> Partly or completely usersupplied string is passed 
+    indirectly to a format function
+
+    int Error (char *fmt, ...);
+    
+    ...
+    int someotherfunc (char *user) {
+      ...
+      Error(user);
+      ...
+    }
+    ...
+- Vulnerabilities of the first type are able to be detected by automated
+  tools like pscan, but the second type can only be found if the tool
+  knows 'Error' is used like a format function
+
+What do we control now
+- By supplying the format string we contorl the behavoir of the 
+  format function
+- Have to examine what we are able to control, or how to use this 
+  partial control to extend to full control over the execution flow
+  of the process
+
+Crash the program
+- A simple attack is to make the program crash
+  - Can be useful to crash a daemon that dumps core and there may
+    be some userful data within the coredump
+- At nearly all UNIX systems illegal pointer accesses are caught
+  by the kernel and the process will send a SIGSEV signal
+  - The program is then normally terminated and dumps core
+- Can use format strings to easily trigger some invalid pointer
+  access by supplying a string like the one shown below
+
+    printf ("%s%s%s%s%s%s%s%s%s%s%s%s");
+
+- '%s' displays memory from an address that is supplied on the stack,
+  where a lot of other data is stored as well, our chances are high
+  to read from a illegal address that is not mapped
+- Most format functions offer the '%n' parameter which can be used
+  to write to addresses on the stack
+  - In similar fashion if that is done a few times there is a high
+    likelihood the program will crash
+
+Viewing the process memory
+- If we can see the reply of the format function -- the output string --,
+  we can gather useful information from it as it is the output of 
+  the behavior that we control
+  - Can see what our string does and how the process layout looks
+  - Can get offsets for real exploitation or reconstruct stack
+    frames of the target process
+
+    printf ("%08x.%08x.%08x.%08x.%08x\n");
+
+- The function above will retrieve five parameters from the stack
+  and display them as 8-digit padded hex numbers, the output may look
+  something like "40012980.080628c4.bffff7a4.00000005.08059c04"
+- This is a partial dump of the stack memory, starting from the 
+  current bottom upwards to the top of the stack (assuming the stack
+  grows towards the low addresses)
+- Information on the stack gives important information about the
+  program flow and local function variables that may be helpful for
+  finding the offests needed to craft an exploit
+- Can also look at memory locations different from the stack memory
+  - To do this we have to get the format function to display memory
+    from an address that we an supply, which gives us two problems
+    1) Need to find a format parameter which uses an address by 
+       reference as stack paramter and displays memory from there
+    2) What address and how do we supply it
+- '%s' parameter does what we want, displays memory from a stack
+  supplied address
+  - With that, how do we get that address on the stack, into the 
+    right place
+- The format string is usually located on the stack itself, so we 
+  have nearly full control over the space where the format string lies
+- The format function internally maintains a pointer to the stack
+  location of the current format parameter
+  - If we can get this pointer pointing into a memory space we
+    control, we can supply an address to the '%s' parameter
+- We can modify the stack pointer buy using dummy parameters to 'dig'
+  up the stack by printing junk 
+
+  printf ("AAA0AAA1_%08x.%08x.%08x.%08x.%08x");
+
+- The '%08x' parameters increast the internal stack pointer of the 
+  format function to the top of the stack, we can get it to point
+  into our memory, the format string itself
+- The format function always maintains the lowest stack frame, so
+  if our buffer lies on the stack at all, it lies above the current
+  stack pointer
+- If we choose the number of '%0x8' parameters correctly, we can 
+  display memory from an arbitrary address by appending '%s' to our
+  string
+
+  address = 0x08480110
+  address (encoded as 32 bit le string): "\x10\x01\x48\x08"
+  printf ("\x10\x01\x48\x08_%08x.%08x.%08x.%08x.%08x|%s|");
+
+- Something like above will dump memory from 0x08480110 until a NULL
+  byte is reached
+- We can map out the entire process space by increasing the memory 
+  address dynamically
+
+Overwriting Arbitrary Memory
+- The holy grail is to take control of the instruction pointer in
+  a process
+- The IP is often a register in the CPU and cannot be directly modified
+  since only machine instructions can change it
+- Need to find instructions that modify the IP and take influence
+  on how those instructions modify it
+- First a saved IP is overwritten, and then the program executes
+  legitamite instructions that transfer control to a attacker supplied
+  address
+
+Exploiting similar to common BO
+- Format string vulns sometimes offer a way around buffer length
+  limitations and allow BO like exploits, as shown in example one
+- We can supply a special format string to circumvent the '400%s'
+  limitation
+
+  "%497d\x3c\xd3\xff\xbf<nops><shellcode>"
+
+- In normal BO we overwrite the return address of a function frame
+  on the stack, as the function that owns that frame returns it will
+  return to our supplied address
+
+Exploitation with pure format strings
+
