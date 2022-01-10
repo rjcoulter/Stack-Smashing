@@ -48,4 +48,47 @@ The format functions
     returns
 
 What is a format string
+- A format string is an ASCIIZ string that contains text and format
+  parameters
+  - ex) printf("The magic number is: %d\n", 1911);
+  - The intial text will be printed followed by a format parameter
+    '%d' that is replaced with the paramter (1911) in the output
+- The '\' is used to escape special characters, and is replaced by 
+  the C compiler at compile-time, replacing the escape sequence
+  by the appropriate character in the binary
+  - The format functions do not recognize those special sequences,
+    but they are sometimes mixed up, for instance the line below works
+    because '\x25' is replaced at comiple time with '%', since 0x25
+    is the ASCII value for the percent character 
+    - ex) printf("The magic number is \x25\n", 23);
 
+The stack and format strings
+- The behavoir of the format function is controlled by the format
+  string
+- The function retrievesr the parameters requested by the format
+  string from the stack
+- Below is an example call and what the stack would look like
+  from within the printf function
+
+  printf("Number %d has no address, number %d has : %08x\n", i, a, &a);
+
+        Stack Top
+        ...
+        <&a> -> address of the varaible i
+        <a> -> value of the variable a
+        <i> -> value of the variable i
+        A -> address of format string
+        ...
+        Stack Bottom
+
+- The format function parses the format string 'A' reading a char at
+  a time
+  - If it is not '%', the character is copied to the output
+  - If it is, the character behind the '%' specifies the type of
+    parameter that should be evaluated
+  - The string "%%" has a special meaning, and is used to print the
+    escape character '%' itself
+    - Every other parameter relates to data which is located on
+      the stack
+
+Format string vulnerabilities
