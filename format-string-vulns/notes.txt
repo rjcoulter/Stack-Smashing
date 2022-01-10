@@ -1,0 +1,51 @@
+Introduction
+- Format string vulnerabilites are a new class that is much more
+  dangerous than a commom buffer overflow
+- Less prevelant than buffer overflows, but are easier to find
+- Can also use automated tools to discover format string vulns
+  - Can also detect for these vulnerabilites in applications
+    that are only available as binaries
+
+The format functions
+- A format function is a special kind of ANSI C function, that takes
+  a variable number of arguments
+  - One of these arguments is the format string
+  - The function evaluates the format string, while also accessing
+    the other parameters given to the function
+- Used to represent primitive C data types in a human readable
+  string convention
+- If an attacker can provide the format string to an ANSI C format
+  function in part or as a whole, you are in trouble
+  - By doing so the behavoir of the format function is changed, and
+    the attacker may be able to get control over the target
+    application
+- A number of format functions are defined in the ANSI C definition,
+  the ones below are part of the standard
+
+  - fprintf -> prints to a FILE stream
+  - printf -> prints to the 'stdout' stream
+  - sprintf -> prints into a string
+  - snprintf -> prints into a string with length checking
+  - vfprintf -> print to a FILE stream from a va_arg structure
+  - vprintf -> prints to 'stdout' from a va_arg structure
+  - vsprintf -> prints to a string from a va_arg structure
+  - vsnprintf -> prints to a string with length checking from a 
+                 va_arg structure
+
+- To understand where this vuln is common, we must see why we would
+  use format string functions
+  - Convert simple C datatypes to a string representation
+  - Allow to specify the format of the representation
+  - Process the resulting string
+- How it works
+  - The format string controls the behavoir of the function, ie it
+    specifies the type of parameters that should be printed
+  - Paramters are saved on the stack (pushed)
+  - Saved either directly (by value) or indirectly (by reference)
+- The calling function
+  - Has to know how many parameters it pushes to the stack, since
+    it has to do the stack correction when the format string
+    returns
+
+What is a format string
+
