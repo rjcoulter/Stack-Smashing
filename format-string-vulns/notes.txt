@@ -233,4 +233,60 @@ Exploiting similar to common BO
   return to our supplied address
 
 Exploitation with pure format strings
+- Sometimes can't extend buffer b/c program uses functions that 
+  have bounds checking
+- We must extend our limited control (the ability to control the 
+  behavior of the format function) to real execution control, the 
+  ability to execute our raw machine code (func3 in example1.c)
+  - snprintf will not let us exceed the buffer length
+- '%n' parameter writes the number of bytes that have been written
+  to a variable of our choice
+  - The address of the variable is given to the format function
+    by placing an integer pointer as a parameter onto the stack
+- Knowing this, we can now write to arbitrary locations in memory
+  similar to how we read from arbitrary locations above
+- The format string below will overwrite four bytes at 0xbfffc8c0 
+  with a small integer number
 
+  "\xc0\xc8\xff\xbf_%08x.%08x.%08x.%08x.%08x.%n"
+
+- We have one of our goals, to write to an arbitrary address, but
+  we still need to get control oer the number we are writing
+  - The number we write, the count of characters written by the format
+    function, is dependant on the format string
+  - Since we control the format string, we have at least some control
+    on this counter by writing more or less bytes
+- Integer numbers on x86 architecture is stored in four bytes, which
+  are little endian ordered, ie the least significatn byte is the
+  first in memory
+  - ex) 0x0000014c is stored in memory as "\x4c\x01\x00\x00"
+- For the counter to the format function we can control the least
+  significant byte by using the dummy %nu parameters to modify it
+- For an address, there are four bytes we must control completely
+  - Either do all at once or write a byte a time four times in a row,
+    which will look something like below
+
+
+    unsigned char canary[5];
+    unsigned char foo[4];
+
+    memset (foo, ’\x00’, sizeof (foo));
+    /* 0 * before */ strcpy (canary, "AAAA");
+
+    /* 1 */ printf ("%16u%n", 7350, (int *) &foo[0]);
+    /* 2 */ printf ("%32u%n", 7350, (int *) &foo[1]);
+    /* 3 */ printf ("%64u%n", 7350, (int *) &foo[2]);
+    /* 4 */ printf ("%128u%n", 7350, (int *) &foo[3]);
+
+    /* 5 * after */ printf ("%02x%02x%02x%02x\n", foo[0], foo[1],
+    foo[2], foo[3]);
+    printf ("canary: %02x%02x%02x%02x\n", canary[0],
+    canary[1], canary[2], canary[3])
+  
+  - This will return the output "10204080" and "00000041"
+- We overwrite four times past the least signifcant byte of an 
+  integer we point to
+  - A side effect is that we will be overwriting memory we do not
+    want to
+
+Variations of Exploitation
