@@ -290,3 +290,32 @@ Exploitation with pure format strings
     want to
 
 Variations of Exploitation
+- Many ways to acomplish exploitation
+
+Short Write
+- Can overwrite an address with just two write operations
+  - Use the '%hn' operation, which writes short int types
+- This technique does not destroy data outside of the address that
+  is being overwriting
+- Generally avoid this as it is dependant on the behavior of the 
+  format function
+- Also it may not be very portable between different systems
+
+Stack Popping
+- Problems can occur if the format string is too short to supply a 
+  stack popping sequence that will reach your own string
+  - As such there is a demand for a method to increase the SP
+    with as few bytes as possible
+- We have used '%u', which is two bytes long and pops 4 bytes
+  - Can use others such as '%f' which are also two bytes long
+    but will pop off 8 bytes
+
+Direct Parameter Access
+- Way to directly address a stack parameter from within a format
+  string
+  - Almost all currently in use C libraries do support this feature,
+    but not all are usable to apply this method to format string 
+    exploitation
+- Controlled by the '$' qualifier
+
+Brute Forcing
