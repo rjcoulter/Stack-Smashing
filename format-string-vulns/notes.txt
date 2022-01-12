@@ -319,3 +319,10 @@ Direct Parameter Access
 - Controlled by the '$' qualifier
 
 Brute Forcing
+- The last hurdle with format string vulns and BO is to get the offset right
+  - Essentially: What to write where
+- If you need mulitple offsets this can get pretty hard
+- With format string this problem comes up with daemons or any program
+  that will only give you one try to
+- Typically falls into two camps, respsonse based
+  or blind brute forcing
